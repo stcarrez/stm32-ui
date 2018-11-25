@@ -1,0 +1,38 @@
+with "@DRIVERS_PATH@/boards/@BOARD_SUBDIR@/@BOARD_PROJECT@";
+with "ui_stm32fxxx";
+
+project Demos is
+
+   for Runtime ("Ada") use @BOARD_RUNTIME@'Runtime("Ada");
+   for Object_Dir use "obj/@BOARD_DIR@";
+
+   for Target use "arm-eabi";
+   
+   for Main use ("gallery-main.adb");
+   for Source_Dirs use ("demos/gallery");
+
+   package Compiler is
+      for Default_Switches ("Ada")
+         use Ui_STM32FXXX.Compiler'Default_Switches ("Ada");
+   end Compiler;
+
+   package Linker is
+      for Default_Switches ("Ada") use
+        ("-Wl,--gc-sections",
+         "-Wl,--print-memory-usage");
+   end Linker;
+
+   package Builder is
+      for Global_Configuration_Pragmas use "gnat.adc";
+   end Builder;
+
+   package Ide is
+      for Gnat use "arm-eabi-gnat";
+      for Gnatlist use "arm-eabi-gnatls";
+      for Debugger_Command use "arm-eabi-gdb";
+      for Program_Host use "localhost:4242";
+      for Communication_Protocol use "remote";
+      for Connection_Tool use "st-util";
+   end Ide;
+
+end Demos;
