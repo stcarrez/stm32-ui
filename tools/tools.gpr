@@ -1,0 +1,26 @@
+with "config";
+
+project Tools is
+
+   Mains := ("cosin.adb", "gif2ada.adb");
+
+   for Main use Mains;
+
+   for Source_Dirs use ("src", "src/gid");
+
+   for Object_Dir use "./" & Config'Object_Dir & "/obj";
+   for Exec_Dir use "./" & Config'Exec_Dir & "/bin";
+
+   package Binder renames Config.Binder;
+
+   package Builder renames Config.Builder;
+
+   package Compiler is
+     for Default_Switches use Config.Compiler'Default_Switches;
+     for Switches ("gid*")
+        use ("-gnatnwua");
+   end Compiler;
+
+   package Linker renames Config.Linker;
+
+end Tools;
