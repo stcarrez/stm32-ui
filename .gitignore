@@ -1,0 +1,10 @@
+autom4te.cache
+obj
+lib
+*~
+*.log
+*.bin
+config.status
+Makefile
+ui_stm32fxxx.gpr
+demos.gpr
