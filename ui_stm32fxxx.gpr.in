@@ -1,0 +1,17 @@
+with "@DRIVERS_PATH@/boards/@BOARD_SUBDIR@/@BOARD_PROJECT@";
+
+library project Ui_STM32FXXX  is
+
+   for Library_Dir use @BOARD_RUNTIME@'Library_Dir;
+   for Library_Name use "ui_@BOARD@";
+   for Object_Dir use "obj/@BOARD_DIR@";
+   for Runtime ("Ada") use @BOARD_RUNTIME@'Runtime("Ada");
+
+   for Source_Dirs use ("src", "src/gui");
+
+   package Compiler is
+      for Default_Switches ("Ada")
+        use @BOARD_RUNTIME@.Compiler'Default_Switches ("Ada");
+   end Compiler;
+
+end Ui_STM32FXXX;
