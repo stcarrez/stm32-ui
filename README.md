@@ -1,6 +1,6 @@
 # STM32 UI Library
 
-[![Build Status](https://img.shields.io/jenkins/s/http/jenkins.vacs.fr/etherscope.svg)](http://jenkins.vacs.fr/job/etherscope/)
+[![Build Status](https://img.shields.io/jenkins/s/http/jenkins.vacs.fr/stm32-ui.svg)](http://jenkins.vacs.fr/job/stm32-ui/)
 [![License](http://img.shields.io/badge/license-APACHE2-blue.svg)](LICENSE)
 ![Commits](https://img.shields.io/github/commits-since/stcarrez/stm32-ui/1.0.0.svg)
 
@@ -42,7 +42,26 @@ You will also need the GNAT Ada compiler for ARM available at http://libre.adaco
 
 Run the command:
 
+```shell
   make
+```
+
+## Building the tools
+
+The `tools` directory contains two tools that can help in some projects.
+These tools are written in Ada and must be built by using the host GNAT Ada compiler
+as follows
+
+```shell
+  cd tools && gprbuild -Ptools
+```
+
+The `cosin` tool is a sinus/cosinus table generation that generated the
+`src/cosin_table.ads` package.
+
+The `gif2ada` tool is the tool that reads a GIF image and generates an Ada
+package specification which can be used in programs together with the
+`UI.Images.Draw_Image` procedure.
 
 # Gallery demo
 
@@ -52,3 +71,23 @@ You can install it with the command:
 ```shell
   make flash-gallery
 ```
+
+You can put your own images by using the `make-gallery-pics.sh` script
+and the `gif2ada` tool.  You can put up to 9 pictures.  The input images
+can be of any format and any size.  They are resized to a 480x272 form
+and converted to GIF.  The converted image is then used to generate
+Ada package specifications that contains selected parts of the GIF file.
+
+```shell
+  sh make-gallery-pics.sh img1.png img2.jpg img3.jpg
+```
+
+After updating the pictures, you have to re-build the demos and flash
+the new binary:
+
+```shell
+ make
+ make flash-gallery
+```
+
+
