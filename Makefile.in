@@ -1,0 +1,57 @@
+BOARD=@BOARD@
+BOARD_DIR=@BOARD_DIR@
+MODE=-XBUILD=Debug -XBUILD_RTS=Debug
+
+ADA_DRIVERS_DIR=@DRIVERS_PATH@
+
+GPRBUILD=gprbuild --target=arm-eabi
+
+GUI_FILES=\
+  src/gui/bitmapped_drawing.adb \
+  src/gui/bitmapped_drawing.ads \
+  src/gui/bmp_fonts.adb \
+  src/gui/bmp_fonts.ads \
+  src/gui/hershey_fonts.adb \
+  src/gui/hershey_fonts.ads \
+  src/gui/hershey_fonts-futural.ads
+
+all: src/gui $(GUI_FILES) demos
+
+demos:
+	$(GPRBUILD) $(MODE) -Pdemos -p
+
+gallery: demos
+	arm-eabi-objcopy -O binary obj/${BOARD_DIR}/gallery-main gallery.bin
+
+flash-gallery:		gallery
+	st-flash write gallery.bin 0x8000000
+
+clean:
+	rm -rf obj gallery.bin
+
+src/gui:
+	mkdir src/gui
+
+src/gui/bitmapped_drawing.adb: $(ADA_DRIVERS_DIR)/examples/shared/common/gui/bitmapped_drawing.adb
+	cp $< $@
+
+src/gui/bitmapped_drawing.ads: $(ADA_DRIVERS_DIR)/examples/shared/common/gui/bitmapped_drawing.ads
+	cp $< $@
+
+src/gui/bmp_fonts.ads: $(ADA_DRIVERS_DIR)/examples/shared/common/gui/bmp_fonts.ads
+	cp $< $@
+
+src/gui/bmp_fonts.adb: $(ADA_DRIVERS_DIR)/examples/shared/common/gui/bmp_fonts.adb
+	cp $< $@
+
+src/gui/hershey_fonts.ads: $(ADA_DRIVERS_DIR)/examples/shared/common/gui/hershey_fonts.ads
+	cp $< $@
+
+src/gui/hershey_fonts.adb: $(ADA_DRIVERS_DIR)/examples/shared/common/gui/hershey_fonts.adb
+	cp $< $@
+
+src/gui/hershey_fonts-futural.ads: $(ADA_DRIVERS_DIR)/examples/shared/common/gui/hershey_fonts-futural.ads
+	cp $< $@
+
+.PHONY: ping echo time dns demos
+
