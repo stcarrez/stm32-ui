@@ -90,4 +90,6 @@ the new binary:
  make flash-gallery
 ```
 
+![](https://github.com/stcarrez/etherscope/wiki/images/stm32-ui-ada-lovelace.jpg)
+![](https://github.com/stcarrez/etherscope/wiki/images/stm32-ui-makewithada.jpg)
 
