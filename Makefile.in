@@ -26,6 +26,12 @@ gallery: demos
 flash-gallery:		gallery
 	st-flash write gallery.bin 0x8000000
 
+graphs: demos
+	arm-eabi-objcopy -O binary obj/${BOARD_DIR}/graphs-main graphs.bin
+
+flash-graphs:		graphs
+	st-flash write graphs.bin 0x8000000
+
 clean:
 	rm -rf obj gallery.bin
 
