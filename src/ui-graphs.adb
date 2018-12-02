@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  ui-graphs -- Generic package to draw graphs
---  Copyright (C) 2016, 2017 Stephane Carrez
+--  Copyright (C) 2016, 2017, 2018 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,35 @@
 
 package body UI.Graphs is
 
+   use type Ada.Real_Time.Time;
+
+   --  ------------------------------
+   --  Initialize the graph.
+   --  ------------------------------
+   procedure Initialize (Data   : in out Data_Type;
+                         Rate   : in Ada.Real_Time.Time_Span) is
+   begin
+      Data.Initialize (Rate);
+   end Initialize;
+
+   --  ------------------------------
+   --  Add the sample value to the current graph sample.
+   --  ------------------------------
+   procedure Add_Sample (Data  : in out Data_Type;
+                         Value : in Value_Type;
+                         Now   : in Ada.Real_Time.Time := Ada.Real_Time.Clock) is
+   begin
+      Data.Add_Sample (Value, Now);
+   end Add_Sample;
+
+   --  ------------------------------
+   --  Get the current deadline for the graph sample.
+   --  ------------------------------
+   function Get_Deadline (Data : in Data_Type) return Ada.Real_Time.Time is
+   begin
+      return Data.Get_Deadline;
+   end Get_Deadline;
+
    --  ------------------------------
    --  Initialize the graph.
    --  ------------------------------
@@ -25,124 +54,167 @@ package body UI.Graphs is
                          X      : in Natural;
                          Y      : in Natural;
                          Width  : in Natural;
-                         Height : in Natural;
-                         Rate   : in Ada.Real_Time.Time_Span) is
-      use type Ada.Real_Time.Time;
+                         Height : in Natural) is
    begin
       Graph.Pos.X := X;
       Graph.Pos.Y := Y;
       Graph.Width := Width;
       Graph.Height := Height;
-      Graph.Rate   := Rate;
-      Graph.Current_Sample := Value_Type'First;
-      Graph.Deadline := Ada.Real_Time.Clock + Rate;
-      Graph.Sample_Count := 0;
-      Graph.Last_Pos := 1;
-      Graph.Samples := (others => Value_Type'First);
+      Graph.Min_Value := Value_Type'First;
+      Graph.Max_Value := Value_Type'Last;
    end Initialize;
 
    --  ------------------------------
-   --  Add the sample value to the current graph sample.
+   --  Set the range values of the graph.
    --  ------------------------------
-   procedure Add_Sample (Graph : in out Graph_Type;
-                         Value : in Value_Type;
-                         Now   : in Ada.Real_Time.Time) is
-      use type Ada.Real_Time.Time;
+   procedure Set_Range (Graph : in out Graph_Type;
+                        Min   : in Value_Type;
+                        Max   : in Value_Type) is
    begin
-      --  Deadline has passed, update the graph values, filling with zero empty slots.
-      if Graph.Deadline < Now then
-         loop
-            Graph.Samples (Graph.Last_Pos) := Graph.Current_Sample;
-            Graph.Current_Sample := Value_Type'First;
-            if Graph.Last_Pos = Graph.Samples'Last then
-               Graph.Last_Pos := Graph.Samples'First;
-            else
-               Graph.Last_Pos := Graph.Last_Pos + 1;
-            end if;
-            if Graph.Sample_Count < Graph.Samples'Length then
-               Graph.Sample_Count := Graph.Sample_Count + 1;
-            end if;
-            Graph.Deadline := Graph.Deadline + Graph.Rate;
+      Graph.Min_Value := Min;
+      Graph.Max_Value := Max;
+      Graph.Auto_Scale := False;
+   end Set_Range;
 
-            --  Check if next deadline has passed.
-            exit when Now < Graph.Deadline;
-         end loop;
-      end if;
-      Graph.Current_Sample := Graph.Current_Sample + Value;
-   end Add_Sample;
+   protected body Data_Type is
 
-   --  ------------------------------
-   --  Compute the maximum value seen as a sample in the graph data.
-   --  ------------------------------
-   function Compute_Max_Value (Graph : in Graph_Type) return Value_Type is
-      Value : Value_Type := Value_Type'First;
-   begin
-      for V of Graph.Samples loop
-         if V > Value then
-            Value := V;
+      --  ------------------------------
+      --  Initialize the graph.
+      --  ------------------------------
+      procedure Initialize (Rate   : in Ada.Real_Time.Time_Span) is
+      begin
+         Graph_Rate   := Rate;
+         Current_Sample := Value_Type'First;
+         Deadline := Ada.Real_Time.Clock + Rate;
+         Sample_Count := 0;
+         Last_Pos := 1;
+         Samples := (others => Value_Type'First);
+      end Initialize;
+
+      --  ------------------------------
+      --  Add the sample value to the current graph sample.
+      --  ------------------------------
+      procedure Add_Sample (Value : in Value_Type;
+                            Now   : in Ada.Real_Time.Time := Ada.Real_Time.Clock) is
+      begin
+         --  Deadline has passed, update the graph values, filling with zero empty slots.
+         if Deadline < Now then
+            loop
+               Samples (Last_Pos) := Current_Sample;
+               Current_Sample := Value_Type'First;
+               if Last_Pos = Samples'Last then
+                  Last_Pos := Samples'First;
+               else
+                  Last_Pos := Last_Pos + 1;
+               end if;
+               if Sample_Count < Samples'Length then
+                  Sample_Count := Sample_Count + 1;
+               end if;
+               Deadline := Deadline + Graph_Rate;
+
+               --  Check if next deadline has passed.
+               exit when Now < Deadline;
+            end loop;
          end if;
-      end loop;
-      return Value;
-   end Compute_Max_Value;
+         Current_Sample := Current_Sample + Value;
+      end Add_Sample;
+
+      --  ------------------------------
+      --  Compute the maximum value seen as a sample in the graph data.
+      --  ------------------------------
+      function Compute_Max_Value return Value_Type is
+         Value : Value_Type := Value_Type'First;
+      begin
+         for V of Samples loop
+            if V > Value then
+               Value := V;
+            end if;
+         end loop;
+         return Value;
+      end Compute_Max_Value;
+
+      --  ------------------------------
+      --  Get the current deadline for the graph sample.
+      --  ------------------------------
+      function Get_Deadline return Ada.Real_Time.Time is
+      begin
+         return Deadline;
+      end Get_Deadline;
+
+      --  ------------------------------
+      --  Get the values to be displayed.
+      --  ------------------------------
+      procedure Get_Values (Into   : out Normalized_Data_Type;
+                            Min    : in Value_Type;
+                            Max    : in Value_Type;
+                            Scale  : in Natural;
+                            Height : in Positive) is
+         Len   : constant Natural := Into'Length;
+         Pos   : Positive;
+         Value : Value_Type'Base;
+      begin
+         if Sample_Count <= Len then
+            Pos := 1;
+         else
+            if Last_Pos > Len then
+               Pos := Last_Pos - Len;
+            else
+               Pos := Samples'Last - Len + Last_Pos;
+            end if;
+         end if;
+         if Scale = 1 then
+            for I in Into'Range loop
+               Value := Samples (Pos);
+               if Value > Max then
+                  Value := Max;
+               elsif Value < Min then
+                  Value := Min;
+               end if;
+               Value := Value * Value_Type'Base (Height) / (Max - Min);
+               Into (I) := Normalized_Value_Type (Value);
+               if Pos = Samples'Last then
+                  Pos := Samples'First;
+               else
+                  Pos := Pos + 1;
+               end if;
+            end loop;
+         end if;
+      end Get_Values;
+
+   end Data_Type;
 
    --  ------------------------------
    --  Draw the graph.
    --  ------------------------------
    procedure Draw (Buffer : in out HAL.Bitmap.Bitmap_Buffer'Class;
-                   Graph  : in out Graph_Type) is
-      Pos : Positive := 1;
-      X   : Natural := Graph.Pos.X;
-      H   : Natural;
-      V   : Value_Type;
-      Last_X : constant Natural := Graph.Pos.X + Graph.Width;
+                   Graph  : in out Graph_Type;
+                   Data   : in out Data_Type) is
+      X      : Natural := Graph.Pos.X;
+      H      : Natural;
+      Values : Normalized_Data_Type (1 .. Graph.Width);
    begin
       --  Recompute the max-value for auto-scaling.
       if Graph.Max_Value = 0 or Graph.Auto_Scale then
-         Graph.Max_Value := Compute_Max_Value (Graph);
+         Graph.Max_Value := Data.Compute_Max_Value;
       end if;
       Buffer.Set_Source (Graph.Background);
       Buffer.Fill_Rect (Area => (Position => (Graph.Pos.X, Graph.Pos.Y),
-                                 Width  => Graph.Width,
-                                 Height => Graph.Height));
-      if Graph.Max_Value = Value_Type'First then
+                                 Width    => Graph.Width,
+                                 Height   => Graph.Height));
+      if Graph.Max_Value = 0 then
          return;
       end if;
-      if Graph.Sample_Count <= Graph.Width then
-         Pos := 1;
-      else
-         if Graph.Last_Pos > Graph.Width then
-            Pos := Graph.Last_Pos - Graph.Width;
-         else
-            Pos := Graph.Samples'Last - Graph.Width + Graph.Last_Pos;
-         end if;
-      end if;
-      --  if Pos + Graph.Sample_Count - 1 > Graph.Width then
-      --   Pos := Graph.Sample_Count - Graph.Width;
-      --  end if;
-      while X < Last_X loop
-         V := Graph.Samples (Pos);
-         if V /= Value_Type'First then
-            H := Natural ((V * Value_Type (Graph.Height)) / Graph.Max_Value);
-            if H > Graph.Height then
-               H := Graph.Height;
-            end if;
 
-            --  If the sample is somehow heavy, fill it with the color.
-            if H > 5 then
-               Buffer.Set_Source (Graph.Fill);
-               Buffer.Draw_Vertical_Line (Pt => (X, 1 + Graph.Pos.Y + Graph.Height - H),
-                                          Height => H - 1);
-            end if;
-         else
-            H := 1;
+      Data.Get_Values (Values, Graph.Min_Value, Graph.Max_Value, 1, Graph.Height);
+      for V of Values loop
+         H := Natural (V);
+         if H > 5 then
+            Buffer.Set_Source (Graph.Fill);
+            Buffer.Draw_Vertical_Line (Pt => (X, 1 + Graph.Pos.Y + Graph.Height - H),
+                                       Height => H - 1);
          end if;
          Buffer.Set_Source (Graph.Foreground);
          Buffer.Set_Pixel (Pt => (X, Graph.Pos.Y + Graph.Height - H));
-         if Pos = Graph.Samples'Last then
-            Pos := Graph.Samples'First;
-         else
-            Pos := Pos + 1;
-         end if;
          X := X + 1;
       end loop;
    end Draw;
