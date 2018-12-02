@@ -43,17 +43,23 @@ package body UI.Clocks is
       R_Sin    : Natural;
       R_Cos    : Natural;
       X, Y     : Natural;
+      Thickness : Natural;
    begin
       case Hand is
          when HOUR_HAND =>
+            Radius := Radius * 50 / 100;
             Pos := ((Hour mod 12) * 60) + Minute;
+            Thickness := 5;
 
          when MINUTE_HAND =>
-            Pos := Minute * 12 + (Second * 12) / 60;
             Radius := Radius - 10;
+            Pos := Minute * 12 + (Second * 12) / 60;
+            Thickness := 2;
 
          when SECOND_HAND =>
+            Radius := Radius;
             Pos := Second * 12;
+            Thickness := 1;
       end case;
 
       Quadrant := Pos / 180;
@@ -82,8 +88,11 @@ package body UI.Clocks is
       end case;
       Buffer.Set_Source (UI.Texts.Foreground);
       Buffer.Draw_Line (Start => (Center.X, Center.Y),
-                        Stop  => (X, Y));
-      Buffer.Fill_Circle (Center => (X, Y), Radius => 3);
+                        Stop  => (X, Y),
+                        Thickness => Thickness);
+      if Hand /= SECOND_HAND then
+         Buffer.Fill_Circle (Center => (X, Y), Radius => 1 + Thickness);
+      end if;
    end Draw_Clock_Tick;
 
    --  ------------------------------
