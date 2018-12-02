@@ -15,7 +15,7 @@ GUI_FILES=\
   src/gui/hershey_fonts.ads \
   src/gui/hershey_fonts-futural.ads
 
-all: src/gui $(GUI_FILES) demos
+all: stamp-gui demos
 
 demos:
 	$(GPRBUILD) $(MODE) -Pdemos -p
@@ -40,6 +40,9 @@ flash-clock:		clock
 
 clean:
 	rm -rf obj gallery.bin
+
+stamp-gui: src/gui $(GUI_FILES)
+	touch stamp-gui
 
 src/gui:
 	mkdir src/gui
