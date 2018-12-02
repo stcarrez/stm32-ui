@@ -32,6 +32,12 @@ graphs: demos
 flash-graphs:		graphs
 	st-flash write graphs.bin 0x8000000
 
+clock: demos
+	arm-eabi-objcopy -O binary obj/${BOARD_DIR}/clock-main clock.bin
+
+flash-clock:		clock
+	st-flash write clock.bin 0x8000000
+
 clean:
 	rm -rf obj gallery.bin
 
