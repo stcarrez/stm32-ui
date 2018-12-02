@@ -6,10 +6,10 @@
 
 STM32 UI provides a set of Ada packages to help in writing graphical
 application on STM32F746, STM32F769 boards.  Several packages have
-been created in two other projects: [EtherScope](https://github.com/stcarrez/etherscope.git)
+been created from two other projects: [EtherScope](https://github.com/stcarrez/etherscope.git)
 and then [Hestia](https://github.com/stcarrez/hestia.git).
-The UI part of these two projects has been integrated in this separate
-project with the help that it could more easily re-used.
+Since then, the UI part of these two projects has been integrated in this separate
+project with the hope that it could be more easily re-used.
 
 The UI packages provided by STM32 UI are intended to help in:
 
@@ -53,7 +53,7 @@ These tools are written in Ada and must be built by using the host GNAT Ada comp
 as follows
 
 ```shell
-  cd tools && gprbuild -Ptools
+  cd tools && gprbuild -Ptools -p
 ```
 
 The `cosin` tool is a sinus/cosinus table generation that generated the
