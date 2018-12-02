@@ -8,8 +8,8 @@ project Demos is
 
    for Target use "arm-eabi";
    
-   for Main use ("gallery-main.adb", "graphs-main.adb");
-   for Source_Dirs use ("demos/gallery", "demos/graphs");
+   for Main use ("gallery-main.adb", "graphs-main.adb", "clock-main.adb");
+   for Source_Dirs use ("demos/gallery", "demos/graphs", "demos/clock");
 
    package Compiler is
       for Default_Switches ("Ada")
