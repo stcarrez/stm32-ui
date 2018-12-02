@@ -103,6 +103,13 @@ You can install it with the command:
   make flash-graphs
 ```
 
+The `UI.Graphs` package must be instantiated with the integer data type you want to graph.
+It then provides a `Data_Type` protected object that holds the data values and a
+`Graph_Type` object that allows to display them on the screen.  Data samples must be added
+at a periodic rate through the `Add_Sample` procedure.  The graph itself is displayed
+by using the `Draw` procedure.  Adding new samples and displaying them may be performed
+from different tasks.
+
 ![](https://github.com/stcarrez/stm32-ui/wiki/images/stm32-ui-graphs.jpg)
 
 # Clock demo
