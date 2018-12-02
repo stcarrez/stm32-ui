@@ -93,3 +93,26 @@ the new binary:
 ![](https://github.com/stcarrez/stm32-ui/wiki/images/stm32-ui-ada-lovelace.jpg)
 ![](https://github.com/stcarrez/stm32-ui/wiki/images/stm32-ui-makewithada.jpg)
 
+# Graphs demo
+
+The graphs demo illustrates how the `UI.Graphs` generic package can be used
+to display various graphs on the screen.
+You can install it with the command:
+
+```shell
+  make flash-graphs
+```
+
+![](https://github.com/stcarrez/stm32-ui/wiki/images/stm32-ui-graphs.jpg)
+
+# Clock demo
+
+The clock demo shows a 12 hour clock to demonstrate the use of `UI.Clock` package
+operations.  It uses the RTC clock provided by the STM32 board.
+You can install it with the command:
+
+```shell
+  make flash-clock
+```
+
+![](https://github.com/stcarrez/stm32-ui/wiki/images/stm32-ui-clock.jpg)
